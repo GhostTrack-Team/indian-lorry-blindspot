@@ -53,7 +53,9 @@ function init() {
 
   // 2. Camera
   camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(9, 6, 11);
+  const isMobilePortrait = window.innerHeight > window.innerWidth;
+  const initialScale = isMobilePortrait ? 1.5 : 1.0;
+  camera.position.set(9 * initialScale, 6 * initialScale, 11 * initialScale);
 
   // 3. Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -260,6 +262,9 @@ function init() {
 
     renderer.render(scene, camera);
   }
+
+  // Set initial viewport and camera bounds
+  onWindowResize();
 
   animate();
 }
@@ -883,29 +888,52 @@ function setupEventListeners() {
 }
 
 /**
+ * Adapts camera FOV dynamically on portrait screen sizes (mobile)
+ * to prevent the 3D lorry model and zones from cutting off at the screen edges.
+ */
+function updateCameraFov() {
+  const defaultFov = 50;
+  const defaultAspect = 1.6; // target aspect ratio for default FOV
+  
+  if (camera.aspect < defaultAspect) {
+    // Calculate new vertical FOV to maintain horizontal field of view
+    const hFOV = 2 * Math.atan(Math.tan((defaultFov * Math.PI) / 360) * defaultAspect);
+    const newFov = 2 * Math.atan(Math.tan(hFOV / 2) / camera.aspect) * (180 / Math.PI);
+    camera.fov = Math.min(newFov, 80); // Clamp to maximum 80 degrees to preserve look and feel
+  } else {
+    camera.fov = defaultFov;
+  }
+  camera.updateProjectionMatrix();
+}
+
+/**
  * Camera preset transitions
  */
 function switchCameraPreset(name) {
   controls.enabled = true;
   controls.reset();
   
+  // Apply a distance scale factor on mobile portrait screens to fit the lorry
+  const isMobilePortrait = window.innerHeight > window.innerWidth;
+  const distanceScale = isMobilePortrait ? 1.5 : 1.0;
+  
   switch (name) {
     case "orbit":
       // Free Orbit default
-      camera.position.set(9, 6, 11);
+      camera.position.set(9 * distanceScale, 6 * distanceScale, 11 * distanceScale);
       controls.target.set(0, 1.2, 0);
       break;
 
     case "radar":
       // Top down flat view (Ortho look)
-      camera.position.set(0, 22, -0.01);
+      camera.position.set(0, 22 * distanceScale, -0.01);
       controls.target.set(0, 0, 0);
       controls.enabled = false; // Disable orbit control rotation to keep orthographic feel
       break;
 
     case "morts":
       // Side cab blind spot perspective
-      camera.position.set(-7.5, 3.5, 5.0);
+      camera.position.set(-7.5 * distanceScale, 3.5 * distanceScale, 5.0 * distanceScale);
       controls.target.set(-1.8, 1.0, 1.8);
       break;
 
@@ -921,7 +949,7 @@ function switchCameraPreset(name) {
 
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+  updateCameraFov();
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   // Auto expand/collapse sidebars if window size crosses the 1024px boundary
