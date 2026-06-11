@@ -591,6 +591,9 @@ function updateUI() {
     trackingLine.visible = true;
   } else {
     alertBanner.className = "alert-banner";
+    alertBanner.style.background = "";
+    alertBanner.style.borderColor = "";
+    alertBanner.style.boxShadow = "";
     
     systemIndicator.className = "status-indicator";
     systemText.textContent = "SYSTEM ACTIVE";
