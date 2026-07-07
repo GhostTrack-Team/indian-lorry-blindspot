@@ -237,34 +237,91 @@ export function createIndianLorry(THREE) {
   leftBacking.position.set(-1.25, 1.30, 0.82);
   cabGroup.add(leftBacking);
 
-  const leftPillarLightMat = new THREE.MeshStandardMaterial({
+  // Common LED material creation helper
+  const createLEDMat = () => new THREE.MeshStandardMaterial({
     color: 0x222222,
     emissive: 0x000000,
     emissiveIntensity: 0,
     roughness: 0.5,
     metalness: 0.2
   });
-  const pillarLightGeo = new THREE.BoxGeometry(0.09, 0.39, 0.07);
-  const leftPillarLight = new THREE.Mesh(pillarLightGeo, leftPillarLightMat);
-  leftPillarLight.position.set(-1.25, 1.30, 0.85);
-  leftPillarLight.name = "leftPillarLight";
-  cabGroup.add(leftPillarLight);
+
+  const pillarLightGeo = new THREE.BoxGeometry(0.09, 0.15, 0.07);
+
+  // Left Top (Stage 1 Ambient) & Bottom (Stage 2 Critical) LEDs
+  const leftPillarLightTop = new THREE.Mesh(pillarLightGeo, createLEDMat());
+  leftPillarLightTop.position.set(-1.25, 1.41, 0.85);
+  leftPillarLightTop.name = "leftPillarLightTop";
+  cabGroup.add(leftPillarLightTop);
+
+  const leftPillarLightBottom = new THREE.Mesh(pillarLightGeo, createLEDMat());
+  leftPillarLightBottom.position.set(-1.25, 1.19, 0.85);
+  leftPillarLightBottom.name = "leftPillarLightBottom";
+  cabGroup.add(leftPillarLightBottom);
 
   const rightBacking = new THREE.Mesh(backingGeo, chassisMaterial);
   rightBacking.position.set(1.25, 1.30, 0.82);
   cabGroup.add(rightBacking);
 
-  const rightPillarLightMat = new THREE.MeshStandardMaterial({
-    color: 0x222222, // Reset to dark gray initially
-    emissive: 0x000000,
-    emissiveIntensity: 0,
-    roughness: 0.5,
-    metalness: 0.2
+  // Right Top (Stage 1 Ambient) & Bottom (Stage 2 Critical) LEDs
+  const rightPillarLightTop = new THREE.Mesh(pillarLightGeo, createLEDMat());
+  rightPillarLightTop.position.set(1.25, 1.41, 0.85);
+  rightPillarLightTop.name = "rightPillarLightTop";
+  cabGroup.add(rightPillarLightTop);
+
+  const rightPillarLightBottom = new THREE.Mesh(pillarLightGeo, createLEDMat());
+  rightPillarLightBottom.position.set(1.25, 1.19, 0.85);
+  rightPillarLightBottom.name = "rightPillarLightBottom";
+  cabGroup.add(rightPillarLightBottom);
+
+  // Dashboard Console Shelf for Driver's Interior View
+  // Center is X = 0.6 (driver side), Y = 0.45, Z = 0.5 relative to cabGroup
+  const dashShelfGeo = new THREE.BoxGeometry(0.8, 0.2, 0.4);
+  const dashShelf = new THREE.Mesh(dashShelfGeo, chassisMaterial);
+  dashShelf.position.set(0.6, 0.45, 0.5);
+  dashShelf.castShadow = true;
+  dashShelf.receiveShadow = true;
+  cabGroup.add(dashShelf);
+
+  // Dashboard warning buzzer core (the warning light / speaker element)
+  const buzzerCoreGeo = new THREE.SphereGeometry(0.02, 16, 16);
+  const buzzerCoreMat = new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    transparent: true,
+    opacity: 0.0 // hidden by default, visible during alerts
   });
-  const rightPillarLight = new THREE.Mesh(pillarLightGeo, rightPillarLightMat);
-  rightPillarLight.position.set(1.25, 1.30, 0.85);
-  rightPillarLight.name = "rightPillarLight";
-  cabGroup.add(rightPillarLight);
+  const buzzerCore = new THREE.Mesh(buzzerCoreGeo, buzzerCoreMat);
+  buzzerCore.position.set(0.6, 0.56, 0.6); // slightly above dashboard shelf
+  buzzerCore.name = "buzzerCore";
+  cabGroup.add(buzzerCore);
+
+  // Concentric visual buzzer warning audio rings
+  const ringGeo = new THREE.RingGeometry(0.03, 0.035, 32);
+  ringGeo.rotateX(-Math.PI / 2); // lie horizontal on dashboard
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0xff3333,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.0 // hidden by default, pulsates during alerts
+  });
+
+  const buzzerRing1 = new THREE.Mesh(ringGeo, ringMat.clone());
+  buzzerRing1.position.copy(buzzerCore.position);
+  buzzerRing1.position.y -= 0.005; // slightly below core to lie on shelf
+  buzzerRing1.name = "buzzerRing1";
+  cabGroup.add(buzzerRing1);
+
+  const buzzerRing2 = new THREE.Mesh(ringGeo, ringMat.clone());
+  buzzerRing2.position.copy(buzzerCore.position);
+  buzzerRing2.position.y -= 0.005;
+  buzzerRing2.name = "buzzerRing2";
+  cabGroup.add(buzzerRing2);
+
+  const buzzerRing3 = new THREE.Mesh(ringGeo, ringMat.clone());
+  buzzerRing3.position.copy(buzzerCore.position);
+  buzzerRing3.position.y -= 0.005;
+  buzzerRing3.name = "buzzerRing3";
+  cabGroup.add(buzzerRing3);
 
   // 3. The Crown (Taj / Headboard)
   // The iconic extension on top of Indian Truck cabs!

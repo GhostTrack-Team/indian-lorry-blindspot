@@ -450,23 +450,30 @@ function playWarningBeeps() {
 
   const now = audioCtx.currentTime;
   if (now - lastBeepTime >= interval) {
-    // Play synthetic alarm tone
-    const osc = audioCtx.createOscillator();
+    // Play synthetic dual-tone alarm (sawtooth + sine)
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(freq, now);
+    osc1.type = "sawtooth";
+    osc1.frequency.setValueAtTime(freq, now);
     
-    // Quick ramp up and fade out to sound high-tech
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(freq + 100, now); // dissonant harmony
+    
+    // Quick ramp up and fade out
     gain.gain.setValueAtTime(0, now);
     gain.gain.linearRampToValueAtTime(vol, now + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + beepDuration);
     
-    osc.connect(gain);
+    osc1.connect(gain);
+    osc2.connect(gain);
     gain.connect(audioCtx.destination);
     
-    osc.start(now);
-    osc.stop(now + beepDuration);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + beepDuration);
+    osc2.stop(now + beepDuration);
     
     lastBeepTime = now;
   }
@@ -648,51 +655,111 @@ function updateUI() {
     }
   }
 
-  // Update Lorry A-Pillar Warning LEDs
-  const leftLight = lorry.getObjectByName("leftPillarLight");
-  const rightLight = lorry.getObjectByName("rightPillarLight");
+  // Update Lorry A-Pillar Warning LEDs and Visual Buzzer
+  const leftLightTop = lorry.getObjectByName("leftPillarLightTop");
+  const leftLightBottom = lorry.getObjectByName("leftPillarLightBottom");
+  const rightLightTop = lorry.getObjectByName("rightPillarLightTop");
+  const rightLightBottom = lorry.getObjectByName("rightPillarLightBottom");
+  const buzzerCore = lorry.getObjectByName("buzzerCore");
+  const buzzerRing1 = lorry.getObjectByName("buzzerRing1");
+  const buzzerRing2 = lorry.getObjectByName("buzzerRing2");
+  const buzzerRing3 = lorry.getObjectByName("buzzerRing3");
 
-  // Left Light state
-  if (leftLight) {
+  // Left Pillar Alert State
+  if (leftLightTop && leftLightBottom) {
     const alertState = data.alertState.LEFT;
     if (alertState === "CRITICAL") {
-      // Flashing Red
+      // Top LED off
+      leftLightTop.material.emissiveIntensity = 0.0;
+      leftLightTop.material.emissive.setHex(0x000000);
+      leftLightTop.material.color.setHex(0x222222);
+
+      // Bottom LED rapid flashing red
       const flash = (Math.floor(Date.now() / 150) % 2 === 0);
-      leftLight.material.color.setHex(flash ? 0xff0000 : 0x222222);
-      leftLight.material.emissive.setHex(flash ? 0xff0000 : 0x000000);
-      leftLight.material.emissiveIntensity = flash ? 4.0 : 0.0;
+      leftLightBottom.material.color.setHex(flash ? 0xff0000 : 0x222222);
+      leftLightBottom.material.emissive.setHex(flash ? 0xff0000 : 0x000000);
+      leftLightBottom.material.emissiveIntensity = flash ? 4.0 : 0.0;
     } else if (alertState === "AWARENESS") {
-      // Solid Yellow
-      leftLight.material.color.setHex(0xffff00);
-      leftLight.material.emissive.setHex(0xffff00);
-      leftLight.material.emissiveIntensity = 1.8;
+      // Top LED solid yellow (Ambient)
+      leftLightTop.material.color.setHex(0xffaa00);
+      leftLightTop.material.emissive.setHex(0xffaa00);
+      leftLightTop.material.emissiveIntensity = 1.8;
+
+      // Bottom LED off
+      leftLightBottom.material.emissiveIntensity = 0.0;
+      leftLightBottom.material.emissive.setHex(0x000000);
+      leftLightBottom.material.color.setHex(0x222222);
     } else {
-      // Off dark gray
-      leftLight.material.color.setHex(0x222222);
-      leftLight.material.emissive.setHex(0x000000);
-      leftLight.material.emissiveIntensity = 0.0;
+      // All off
+      leftLightTop.material.emissiveIntensity = 0.0;
+      leftLightTop.material.color.setHex(0x222222);
+      leftLightTop.material.emissive.setHex(0x000000);
+      leftLightBottom.material.emissiveIntensity = 0.0;
+      leftLightBottom.material.color.setHex(0x222222);
+      leftLightBottom.material.emissive.setHex(0x000000);
     }
   }
 
-  // Right Light state
-  if (rightLight) {
+  // Right Pillar Alert State
+  if (rightLightTop && rightLightBottom) {
     const alertState = data.alertState.RIGHT;
     if (alertState === "CRITICAL") {
-      // Flashing Red
+      // Top LED off
+      rightLightTop.material.emissiveIntensity = 0.0;
+      rightLightTop.material.emissive.setHex(0x000000);
+      rightLightTop.material.color.setHex(0x222222);
+
+      // Bottom LED rapid flashing red
       const flash = (Math.floor(Date.now() / 150) % 2 === 0);
-      rightLight.material.color.setHex(flash ? 0xff0000 : 0x222222);
-      rightLight.material.emissive.setHex(flash ? 0xff0000 : 0x000000);
-      rightLight.material.emissiveIntensity = flash ? 4.0 : 0.0;
+      rightLightBottom.material.color.setHex(flash ? 0xff0000 : 0x222222);
+      rightLightBottom.material.emissive.setHex(flash ? 0xff0000 : 0x000000);
+      rightLightBottom.material.emissiveIntensity = flash ? 4.0 : 0.0;
     } else if (alertState === "AWARENESS") {
-      // Solid Yellow
-      rightLight.material.color.setHex(0xffff00);
-      rightLight.material.emissive.setHex(0xffff00);
-      rightLight.material.emissiveIntensity = 1.8;
+      // Top LED solid yellow (Ambient)
+      rightLightTop.material.color.setHex(0xffaa00);
+      rightLightTop.material.emissive.setHex(0xffaa00);
+      rightLightTop.material.emissiveIntensity = 1.8;
+
+      // Bottom LED off
+      rightLightBottom.material.emissiveIntensity = 0.0;
+      rightLightBottom.material.emissive.setHex(0x000000);
+      rightLightBottom.material.color.setHex(0x222222);
     } else {
-      // Off dark gray
-      rightLight.material.color.setHex(0x222222);
-      rightLight.material.emissive.setHex(0x000000);
-      rightLight.material.emissiveIntensity = 0.0;
+      // All off
+      rightLightTop.material.emissiveIntensity = 0.0;
+      rightLightTop.material.color.setHex(0x222222);
+      rightLightTop.material.emissive.setHex(0x000000);
+      rightLightBottom.material.emissiveIntensity = 0.0;
+      rightLightBottom.material.color.setHex(0x222222);
+      rightLightBottom.material.emissive.setHex(0x000000);
+    }
+  }
+
+  // Animate Visual Dashboard Buzzer
+  if (buzzerCore && buzzerRing1 && buzzerRing2 && buzzerRing3) {
+    if (hasCritical) {
+      buzzerCore.material.opacity = 1.0;
+      
+      // Animate Rings
+      const t = Date.now() * 0.003;
+      
+      const scale1 = 0.5 + (t % 1.0) * 1.5;
+      buzzerRing1.scale.set(scale1, 1, scale1);
+      buzzerRing1.material.opacity = (1.0 - (t % 1.0)) * 0.7;
+
+      const scale2 = 0.5 + ((t + 0.33) % 1.0) * 1.5;
+      buzzerRing2.scale.set(scale2, 1, scale2);
+      buzzerRing2.material.opacity = (1.0 - ((t + 0.33) % 1.0)) * 0.7;
+
+      const scale3 = 0.5 + ((t + 0.66) % 1.0) * 1.5;
+      buzzerRing3.scale.set(scale3, 1, scale3);
+      buzzerRing3.material.opacity = (1.0 - ((t + 0.66) % 1.0)) * 0.7;
+    } else {
+      // Hide buzzer elements
+      buzzerCore.material.opacity = 0.0;
+      buzzerRing1.material.opacity = 0.0;
+      buzzerRing2.material.opacity = 0.0;
+      buzzerRing3.material.opacity = 0.0;
     }
   }
 }
@@ -871,7 +938,7 @@ function setupEventListeners() {
   });
 
   // Camera Presets
-  const cams = ["orbit", "radar", "morts-left", "morts-right", "mirror-left", "mirror-right"];
+  const cams = ["orbit", "radar", "cabin", "morts-left", "morts-right", "mirror-left", "mirror-right"];
   cams.forEach(c => {
     const btn = document.getElementById(`cam-${c}`);
     btn.addEventListener('click', () => {
@@ -1010,6 +1077,13 @@ function switchCameraPreset(name) {
       // Free Orbit default
       camera.position.set(9 * distanceScale, 6 * distanceScale, 11 * distanceScale);
       controls.target.set(0, 1.2, 0);
+      break;
+
+    case "cabin":
+      // Driver's eye level viewpoint inside the cab (ignores mobile distance scale to stay inside)
+      camera.position.set(0.6, 2.6, 2.2);
+      controls.target.set(0.0, 2.0, 5.5);
+      controls.enabled = false; // Lock controls in cabin view
       break;
 
     case "radar":
