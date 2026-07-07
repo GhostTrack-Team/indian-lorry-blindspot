@@ -1071,6 +1071,11 @@ function switchCameraPreset(name) {
   // Apply a distance scale factor on mobile portrait screens to fit the lorry
   const isMobilePortrait = window.innerHeight > window.innerWidth;
   const distanceScale = isMobilePortrait ? 1.5 : 1.0;
+
+  // Restore default FOV for other presets
+  if (name !== "cabin") {
+    updateCameraFov();
+  }
   
   switch (name) {
     case "orbit":
@@ -1080,9 +1085,11 @@ function switchCameraPreset(name) {
       break;
 
     case "cabin":
-      // Driver's eye level viewpoint inside the cab (ignores mobile distance scale to stay inside)
-      camera.position.set(0.6, 2.6, 2.2);
-      controls.target.set(0.0, 2.0, 5.5);
+      // Driver's eye level viewpoint inside the cab (wider FOV and horizontal look angle to balance view)
+      camera.fov = 85;
+      camera.updateProjectionMatrix();
+      camera.position.set(0.65, 2.50, 1.70);
+      controls.target.set(-0.30, 2.30, 5.00);
       controls.enabled = false; // Lock controls in cabin view
       break;
 
