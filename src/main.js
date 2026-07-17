@@ -1197,7 +1197,7 @@ function switchCameraPreset(name) {
   }
 }
 
-// Preprocess cabin interior image to turn white windows transparent
+// Preprocess cabin interior image to turn white/gray windows transparent
 function initCabinOverlay() {
   const imgElement = document.getElementById("cabin-bg-img");
   if (!imgElement) return;
@@ -1220,6 +1220,14 @@ function initCabinOverlay() {
     const minY = Math.floor(height * 0.18);
     const maxY = Math.floor(height * 0.70);
 
+    // Sample the solid background color of the windshield at the center
+    const sampleX = Math.floor(width * 0.5);
+    const sampleY = Math.floor(height * 0.4);
+    const sampleIdx = (sampleY * width + sampleX) * 4;
+    const targetR = data[sampleIdx];
+    const targetG = data[sampleIdx+1];
+    const targetB = data[sampleIdx+2];
+
     for (let y = minY; y < maxY; y++) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4;
@@ -1227,8 +1235,12 @@ function initCabinOverlay() {
         const g = data[idx+1];
         const b = data[idx+2];
 
-        // Turn very bright pixels transparent
-        if (r > 235 && g > 235 && b > 235) {
+        // Calculate color distance from the sampled windshield background color
+        const dist = Math.abs(r - targetR) + Math.abs(g - targetG) + Math.abs(b - targetB);
+
+        // Turn matching windshield/window background pixels transparent (with small tolerance)
+        // Also support fallback for bright white background if needed (dist < 15 or pure white)
+        if (dist < 15 || (r > 235 && g > 235 && b > 235)) {
           data[idx+3] = 0; // Alpha = 0
         }
       }
