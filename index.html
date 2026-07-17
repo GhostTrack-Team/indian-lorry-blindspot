@@ -12,6 +12,31 @@
     <div class="crt-vignette"></div>
     <div class="radar-scan-line"></div>
 
+    <!-- Cabin Interior Image Overlay -->
+    <div id="cabin-overlay-container">
+      <div class="cabin-bg-wrapper">
+        <img id="cabin-bg-img" alt="Cabin Interior" style="display: none;" />
+        
+        <!-- Left A-Pillar LEDs -->
+        <div class="apillar-leds left-pillar">
+          <div class="led led-top yellow-led" id="cabin-left-led-top"></div>
+          <div class="led led-bottom red-led" id="cabin-left-led-bottom"></div>
+        </div>
+        
+        <!-- Right A-Pillar LEDs -->
+        <div class="apillar-leds right-pillar">
+          <div class="led led-top yellow-led" id="cabin-right-led-top"></div>
+          <div class="led led-bottom red-led" id="cabin-right-led-bottom"></div>
+        </div>
+        
+        <!-- Steering Wheel Haptic Indicator -->
+        <div id="haptic-steering-ring">
+          <span class="haptic-label">HAPTIC ALERT</span>
+          <div class="ripple"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- 3D Render Canvas Container -->
     <div id="canvas-container"></div>
 

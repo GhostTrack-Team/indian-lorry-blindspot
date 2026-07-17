@@ -164,6 +164,7 @@ function init() {
 
   // Setup Event Listeners
   setupEventListeners();
+  initCabinOverlay();
 
   // Animation Loop
   const clock = new THREE.Clock();
@@ -762,6 +763,64 @@ function updateUI() {
       buzzerRing3.material.opacity = 0.0;
     }
   }
+
+  // Update HTML Cabin Overlay Warning LEDs and Steering Haptic Ring
+  const cabinLeftLedTop = document.getElementById("cabin-left-led-top");
+  const cabinLeftLedBottom = document.getElementById("cabin-left-led-bottom");
+  const cabinRightLedTop = document.getElementById("cabin-right-led-top");
+  const cabinRightLedBottom = document.getElementById("cabin-right-led-bottom");
+  const hapticRing = document.getElementById("haptic-steering-ring");
+
+  // Update Left Pillar HTML LEDs
+  if (cabinLeftLedTop && cabinLeftLedBottom) {
+    const alertState = data.alertState.LEFT;
+    if (alertState === "CRITICAL") {
+      cabinLeftLedTop.classList.remove("active");
+      
+      const flash = (Math.floor(Date.now() / 150) % 2 === 0);
+      if (flash) {
+        cabinLeftLedBottom.classList.add("active");
+      } else {
+        cabinLeftLedBottom.classList.remove("active");
+      }
+    } else if (alertState === "AWARENESS") {
+      cabinLeftLedTop.classList.add("active");
+      cabinLeftLedBottom.classList.remove("active");
+    } else {
+      cabinLeftLedTop.classList.remove("active");
+      cabinLeftLedBottom.classList.remove("active");
+    }
+  }
+
+  // Update Right Pillar HTML LEDs
+  if (cabinRightLedTop && cabinRightLedBottom) {
+    const alertState = data.alertState.RIGHT;
+    if (alertState === "CRITICAL") {
+      cabinRightLedTop.classList.remove("active");
+      
+      const flash = (Math.floor(Date.now() / 150) % 2 === 0);
+      if (flash) {
+        cabinRightLedBottom.classList.add("active");
+      } else {
+        cabinRightLedBottom.classList.remove("active");
+      }
+    } else if (alertState === "AWARENESS") {
+      cabinRightLedTop.classList.add("active");
+      cabinRightLedBottom.classList.remove("active");
+    } else {
+      cabinRightLedTop.classList.remove("active");
+      cabinRightLedBottom.classList.remove("active");
+    }
+  }
+
+  // Update Steering Wheel Haptic Ring (vibrates on any critical alarm)
+  if (hapticRing) {
+    if (hasCritical) {
+      hapticRing.classList.add("active");
+    } else {
+      hapticRing.classList.remove("active");
+    }
+  }
 }
 
 /**
@@ -1076,6 +1135,16 @@ function switchCameraPreset(name) {
   if (name !== "cabin") {
     updateCameraFov();
   }
+
+  // Toggle cabin overlay container visibility
+  const cabinOverlay = document.getElementById("cabin-overlay-container");
+  if (cabinOverlay) {
+    if (name === "cabin") {
+      cabinOverlay.classList.add("visible");
+    } else {
+      cabinOverlay.classList.remove("visible");
+    }
+  }
   
   switch (name) {
     case "orbit":
@@ -1086,10 +1155,10 @@ function switchCameraPreset(name) {
 
     case "cabin":
       // Driver's eye level viewpoint inside the cab (wider FOV and horizontal look angle to balance view)
-      camera.fov = 85;
+      camera.fov = 75;
       camera.updateProjectionMatrix();
-      camera.position.set(0.65, 2.50, 1.70);
-      controls.target.set(-0.30, 2.30, 5.00);
+      camera.position.set(0.0, 2.50, 1.50);
+      controls.target.set(0.0, 2.30, 8.00);
       controls.enabled = false; // Lock controls in cabin view
       break;
 
@@ -1126,6 +1195,49 @@ function switchCameraPreset(name) {
       controls.enabled = false; // lock rotation to mirror angle
       break;
   }
+}
+
+// Preprocess cabin interior image to turn white windows transparent
+function initCabinOverlay() {
+  const imgElement = document.getElementById("cabin-bg-img");
+  if (!imgElement) return;
+
+  const img = new Image();
+  img.src = "./cabin_interior.png"; // Loaded from the public folder
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    const height = canvas.height;
+    const width = canvas.width;
+
+    // Windshield and side windows are in the middle vertical span (Y: 18% to 70%)
+    const minY = Math.floor(height * 0.18);
+    const maxY = Math.floor(height * 0.70);
+
+    for (let y = minY; y < maxY; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+        const r = data[idx];
+        const g = data[idx+1];
+        const b = data[idx+2];
+
+        // Turn very bright pixels transparent
+        if (r > 235 && g > 235 && b > 235) {
+          data[idx+3] = 0; // Alpha = 0
+        }
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+    imgElement.src = canvas.toDataURL("image/png");
+    imgElement.style.display = "block"; // Show once processed
+  };
 }
 
 function onWindowResize() {

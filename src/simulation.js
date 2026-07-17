@@ -299,11 +299,11 @@ export class BlindSpotSimulation {
         const isVRU = (key === "pedestrian" || key === "bicycle" || key === "motorcycle");
 
         // Calculate speed-adaptive danger zone threshold
-        let dangerThreshold = 2.0;
+        let dangerThreshold = 4.5;
         if (this.lorrySpeed >= 80) {
-          dangerThreshold = 6.0;
+          dangerThreshold = 8.0;
         } else if (this.lorrySpeed > 40) {
-          dangerThreshold = 2.0 + (this.lorrySpeed - 40) * 0.1;
+          dangerThreshold = 4.5 + (this.lorrySpeed - 40) * 0.0875;
         }
 
         let targetThreat = 0; // 0 = safe, 1 = awareness, 2 = critical
@@ -436,11 +436,11 @@ export class BlindSpotSimulation {
                      this.activeTargetKey === "motorcycle");
                      
       // Calculate speed-adaptive danger zone threshold in meters
-      let dangerThreshold = 2.0;
+      let dangerThreshold = 4.5;
       if (this.lorrySpeed >= 80) {
-        dangerThreshold = 6.0;
+        dangerThreshold = 8.0;
       } else if (this.lorrySpeed > 40) {
-        dangerThreshold = 2.0 + (this.lorrySpeed - 40) * 0.1;
+        dangerThreshold = 4.5 + (this.lorrySpeed - 40) * 0.0875;
       }
 
       // Driver Turn Intent
