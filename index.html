@@ -5,14 +5,39 @@
     <link rel="icon" type="image/svg+xml" href="/indian-lorry-blindspot/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>3D Critical Blind Spot Monitoring System (Angles Morts)</title>
-    <script type="module" crossorigin src="/indian-lorry-blindspot/assets/index-COT06PlK.js"></script>
-    <link rel="stylesheet" crossorigin href="/indian-lorry-blindspot/assets/index-Cn_Hzpx9.css">
+    <script type="module" crossorigin src="/indian-lorry-blindspot/assets/index-BCZHeBSe.js"></script>
+    <link rel="stylesheet" crossorigin href="/indian-lorry-blindspot/assets/index-BrFWakdI.css">
   </head>
   <body>
     <!-- Screen Overlays for styling -->
     <div class="crt-overlay"></div>
     <div class="crt-vignette"></div>
     <div class="radar-scan-line"></div>
+
+    <!-- Cabin Interior Image Overlay -->
+    <div id="cabin-overlay-container">
+      <div class="cabin-bg-wrapper">
+        <img id="cabin-bg-img" alt="Cabin Interior" style="display: none;" />
+        
+        <!-- Left A-Pillar LEDs -->
+        <div class="apillar-leds left-pillar">
+          <div class="led led-top yellow-led" id="cabin-left-led-top"></div>
+          <div class="led led-bottom red-led" id="cabin-left-led-bottom"></div>
+        </div>
+        
+        <!-- Right A-Pillar LEDs -->
+        <div class="apillar-leds right-pillar">
+          <div class="led led-top yellow-led" id="cabin-right-led-top"></div>
+          <div class="led led-bottom red-led" id="cabin-right-led-bottom"></div>
+        </div>
+        
+        <!-- Steering Wheel Haptic Indicator -->
+        <div id="haptic-steering-ring">
+          <span class="haptic-label">HAPTIC ALERT</span>
+          <div class="ripple"></div>
+        </div>
+      </div>
+    </div>
 
     <!-- 3D Render Canvas Container -->
     <div id="canvas-container"></div>
